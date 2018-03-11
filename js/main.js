@@ -17,10 +17,14 @@ function init() {
     renderer = new THREE.WebGLRenderer( { canvas: canvas } );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( config.resolution, config.resolution );
-    let d = document.getElementById( 'vertex_shader' );
 
     var geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );;
     material = new THREE.RawShaderMaterial( {
+        uniforms: {
+            resolution: { value: new THREE.Vector2( canvas.width, canvas.height ) },
+            cameraWorldMatrix: { value: camera.matrixWorld },
+            cameraProjectionMatrixInverse: { value: new THREE.Matrix4().getInverse( camera.projectionMatrix ) }
+        },
         vertexShader: document.getElementById( 'vertex_shader' ).textContent,
         fragmentShader: document.getElementById( 'fragment_shader' ).textContent
     } );
