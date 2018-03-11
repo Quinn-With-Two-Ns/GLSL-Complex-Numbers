@@ -4,7 +4,7 @@ if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 var scene, camera, renderer;
 var material;
 var config = {
-    resolution: '512'
+    resolution: '1024'
 };
 
 init();
