@@ -62,7 +62,7 @@
             vec2 cmpxlog(in vec2 z){
                 return vec2( log(cmpxmag(z)), cmpxarg(z));
             }
-
+            // c^p, this dosn't work atm
             vec2 cmpxpow(in vec2 c, int p) {
                 for (int i = 0; i < p; ++i) {
                     c = cmpxmul(c, c);
@@ -88,6 +88,10 @@
                 vec2 a = cmpxsin(z);
                 vec2 b = cmpxcos(z);
                 return cmpxdiv(a,b);
+            }
+            // Extra fun things
+            vec2 collatz_map(in vec2 z){
+                return 0.25*( vec2(1,0) + 4.0*z - cmpxmul( 1.0+2.0*z, cmpxcos(M_PI*z)) );
             }
 
             vec3 cmp2hsv(in vec2 z){
@@ -137,8 +141,9 @@
             void main(void) {
                 // screen position
                 vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                const int p = 2;
-                vec2 w = cmpxpow(z,-1000.0)- vec2(1,0);
+                const int iter = 400;
+                vec2 w = collatz_map(z);
+
                 gl_FragColor = vec4( hsl2rgb(cmp2hsv(w)), 1.0 );
             }
         </script>

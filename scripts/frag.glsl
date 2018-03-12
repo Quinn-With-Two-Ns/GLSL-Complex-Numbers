@@ -10,7 +10,7 @@ uniform mat4 cameraProjectionMatrixInverse;
 #define M_PI 3.1415926535897932384626433832795
 #define A 10.0
 #define I vec2(0,1)
-#define -I vec2(0,1)
+
 
 vec2 cmpxcjg(in vec2 c) {
     return vec2(c.x, -c.y);
@@ -20,19 +20,16 @@ vec2 cmpxmul(in vec2 a, in vec2 b) {
     return vec2(a.x * b.x - a.y * b.y, a.y * b.x + a.x * b.y);
 }
 
-vec2 cmpxpow(in vec2 c, int p) {
-    for (int i = 0; i < p; ++i) {
-        c = cmpxmul(c, c);
-    }
-    return c;
-}
-
-vec2 cmpxdiv(in vec2 a, in vec2 b) {
-    return cmpxmul(a, cmpxcjg(b));
+float cmpxmag2(in vec2 c) {
+    return dot(c,c);
 }
 
 float cmpxmag(in vec2 c) {
-    return sqrt(c.x * c.x + c.y * c.y);
+    return sqrt(dot(c,c));
+}
+
+vec2 cmpxdiv(in vec2 a, in vec2 b) {
+    return cmpxmul(a, cmpxcjg(b))/cmpxmag2(b);
 }
 
 float cmpxarg(in vec2 z){
@@ -41,16 +38,43 @@ float cmpxarg(in vec2 z){
 }
 
 vec2 cmpxexp(in vec2 z){
-    
     vec2 w = vec2( cos(z.y), sin(z.y));
     w *= exp(z.x);
     return w;
 }
 
+vec2 cmpxlog(in vec2 z){
+    return vec2( log(cmpxmag(z)), cmpxarg(z));
+}
+// c^p, this dosn't work atm
+vec2 cmpxpow(in vec2 c, int p) {
+    for (int i = 0; i < p; ++i) {
+        c = cmpxmul(c, c);
+    }
+    return c;
+}
+
+vec2 cmpxpow(in vec2 z, in float p) {
+    return cmpxexp( cmpxlog(z) * p );
+}
+
 vec2 cmpxcos(in vec2 z){
-    vec2 w = cmpxexp( cmpxmul( z, I) ) + cmpxexp( cmpxmul( z, -I) );
+    vec2 w = cmpxexp( cmpxmul( z, I) ) + cmpxexp( cmpxmul( z, -1.0*I) );
     return 0.5 * w;
 }
+
+vec2 cmpxsin(in vec2 z){
+    vec2 w = cmpxexp( cmpxmul( z, I) ) - cmpxexp( cmpxmul( z, -1.0*I) );
+    return 0.5 * cmpxmul( w, -1.0*I );
+}
+
+vec2 cmpxtan(in vec2 z){
+    vec2 a = cmpxsin(z);
+    vec2 b = cmpxcos(z);
+    return cmpxdiv(a,b);
+}
+// Extra fun things
+
 
 vec3 cmp2hsv(in vec2 z){
     return vec3(cmpxarg(z)/(2.0*M_PI), 1.0, 1.0-exp(-1.0*cmpxmag(z)) );
@@ -98,10 +122,9 @@ vec3 hsl2rgb(vec3 hsl) {
 
 void main(void) {
     // screen position
-    vec2 z = ( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-    vec2 w= cmpxexp(z);
-    for(int i = 0; i < 20; i++){
-        w = cmpxexp(cmpxmul(z,w));
-    }
-    gl_FragColor = vec4( hsl2rgb(cmp2hsv(cmpxcos(z))), 1.0 );
+    vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
+    const int iter = 10;
+    vec2 w = cmpxlog(z);
+    
+    gl_FragColor = vec4( hsl2rgb(cmp2hsv(w)), 1.0 );
 }
