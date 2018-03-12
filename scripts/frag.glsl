@@ -9,6 +9,8 @@ uniform mat4 cameraProjectionMatrixInverse;
 
 #define M_PI 3.1415926535897932384626433832795
 #define A 10.0
+#define I vec2(0,1)
+#define -I vec2(0,1)
 
 vec2 cmpxcjg(in vec2 c) {
     return vec2(c.x, -c.y);
@@ -43,6 +45,11 @@ vec2 cmpxexp(in vec2 z){
     vec2 w = vec2( cos(z.y), sin(z.y));
     w *= exp(z.x);
     return w;
+}
+
+vec2 cmpxcos(in vec2 z){
+    vec2 w = cmpxexp( cmpxmul( z, I) ) + cmpxexp( cmpxmul( z, -I) );
+    return 0.5 * w;
 }
 
 vec3 cmp2hsv(in vec2 z){
@@ -96,5 +103,5 @@ void main(void) {
     for(int i = 0; i < 20; i++){
         w = cmpxexp(cmpxmul(z,w));
     }
-    gl_FragColor = vec4( hsl2rgb(cmp2hsv(w)), 1.0 );
+    gl_FragColor = vec4( hsl2rgb(cmp2hsv(cmpxcos(z))), 1.0 );
 }
