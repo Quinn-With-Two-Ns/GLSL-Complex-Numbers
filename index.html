@@ -1,6 +1,6 @@
 <html lang="en">
 	<head>
-		<title>Shader demo</title>
+		<title>Domain Coloring</title>
 		<meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <style>
@@ -15,6 +15,9 @@
 
         <script  id="fragment_shader"  type="x-shader/x-fragment">
             precision highp float;
+            uniform float time;
+            uniform float delta; // about 0.016
+
             uniform vec2 resolution;
             
             uniform mat4 viewMatrix;
@@ -23,9 +26,13 @@
             uniform mat4 cameraWorldMatrix;
             uniform mat4 cameraProjectionMatrixInverse;
             
+            uniform sampler2D tex;
+
             #define M_PI 3.1415926535897932384626433832795
             #define A 10.0
+            // Define the imaginary unit, didn't use the standard i or j cause they areoften used in for loops
             #define I vec2(0,1)
+            #define PERIOD 10.00
             
             vec2 cpx_con(in vec2 z) {
                 return vec2(z.x, -z.y);
@@ -61,18 +68,15 @@
             vec2 cpx_log(in vec2 z){
                 return vec2( log(cpx_mag(z)), cpx_arg(z));
             }
-            // c^p, this dosn't work atm
-            vec2 cpx_pow(in vec2 c, int p) {
-                for (int i = 0; i < p; ++i) {
-                    c = cpx_mul(c, c);
-                }
-                return c;
-            }
 
-            vec2 cpx_pow(in vec2 z, in float a) {
+            vec2 cpx_pow(in vec2 z, float a) {
                 return cpx_exp(cpx_log(z) * a );
             }
 
+            vec2 cpx_sqrt(in vec2 z){
+                return cpx_pow(z, 0.5);
+            }
+            // Trig Functions
             vec2 cpx_cos(in vec2 z){
                 vec2 w = cpx_exp( cpx_mul( z, I) ) + cpx_exp( cpx_mul( z, -1.0*I) );
                 return 0.5 * w;
@@ -88,7 +92,22 @@
                 vec2 b = cpx_cos(z);
                 return cpx_div(a,b);
             }
+            // Inverse Trig
+            vec2 cpx_asin(in vec2 z){
+                vec2 w = cpx_log( cpx_mul(I,z) + cpx_sqrt( vec2(1,0) - cpx_pow(z,2.0)) );
+                return cpx_mul(-1.0*I,w);
+            }
 
+            vec2 cpx_acos(in vec2 z){
+                vec2 w = cpx_log( z + cpx_sqrt( cpx_pow(z,2.0) + vec2(1,0) ) );
+                return cpx_mul(-1.0*I,w);
+            }
+
+            vec2 cpx_atan(in vec2 z){
+                vec2 w = cpx_log( vec2(1,0) - cpx_mul(z,I)) - cpx_log( vec2(1,0) + cpx_mul(z,I));
+                return cpx_mul(0.5*I,w);
+            }
+            // Hyperbolic Trig
             vec2 cpx_cosh(in vec2 z){
                 vec2 w = cpx_exp( z ) + cpx_exp( -1.0*z );;
                 return 0.5 * w;
@@ -155,12 +174,22 @@
             
             
             void main(void) {
+                //
+                float t = PERIOD*sin((2.0*M_PI)*time/(PERIOD));
                 // screen position
                 vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                const int iter = 400;
-                vec2 w = cpx_tanh(z);
+                vec2 w = z;
+                const int iter = 100;
+                int j;
+                for(int i = 0; i < iter; i++){
+                    w = cpx_pow(cpx_con(w),t)+z;
+                    if(cpx_mag2(w) > 4.0){
+                        j = i;
+                        break;
+                    }
+                }
+                gl_FragColor = texture2D(tex, vec2((j == iter ? 0.0 : float(j)) / 100.0, 0.5));
 
-                gl_FragColor = vec4( hsl2rgb(cpx2hsv(w)), 1.0 );
             }
         </script>
         <script  id="vertex_shader"  type="x-shader/x-fragment">
