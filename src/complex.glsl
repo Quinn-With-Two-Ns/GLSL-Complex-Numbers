@@ -1,22 +1,8 @@
 precision highp float;
-uniform float time;
-uniform float delta; // about 0.016
-
-uniform vec2 resolution;
-
-uniform mat4 viewMatrix;
-uniform vec3 cameraPosition;
-
-uniform mat4 cameraWorldMatrix;
-uniform mat4 cameraProjectionMatrixInverse;
-
-uniform sampler2D tex
 
 #define M_PI 3.1415926535897932384626433832795
-#define A 10.0
 // Define the imaginary unit, didn't use the standard i or j cause they areoften used in for loops
 #define I vec2(0,1)
-#define PERIOD 10.0
 
 vec2 cpx_con(in vec2 z) {
     return vec2(z.x, -z.y);
@@ -112,7 +98,7 @@ vec2 cpx_tanh(in vec2 z){
 vec2 collatz_map(in vec2 z){
     return 0.25*( vec2(1,0) + 4.0*z - cpx_mul( 1.0+2.0*z, cpx_cos(M_PI*z)) );
 }
-
+// Simple Domain Colouring
 vec3 cpx2hsv(in vec2 z){
     return vec3(cpx_arg(z)/(2.0*M_PI), 1.0, 1.0-exp(-1.0*cpx_mag(z)) );
 }
@@ -156,79 +142,3 @@ vec3 hsl2rgb(vec3 hsl) {
     return rgb;
 }
 
-
-void main(void) {
-    //
-    float t = PERIOD*sin((2.0*M_PI)*time/PERIOD);
-    // screen position
-    vec2 z = 3.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-
-    vec2 w = cpx_pow(z+ vec2(1,0),-1.0*t) ;
-
-    gl_FragColor = vec4( hsl2rgb(cpx2hsv(w)), 1.0 );
-}
-
-                vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                vec2 w = z;
-                const int iter = 100;
-                int j;
-                for(int i = 0; i < iter; i++){
-                    w = cpx_pow(w,t)+z;
-                    if(cpx_mag2(w) > 4.0){
-                        j = i;
-                        break;
-                    }
-                }
-                gl_FragColor = texture2D(tex, vec2((j == iter ? 0.0 : float(j)) / 100.0, 0.5));
-
-                                // screen position
-                vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                vec2 w = cpx_log(vec2(1,0) - cpx_pow(z,3.0)) ;
-
-                gl_FragColor = vec4( hsl2rgb(cpx2hsv(w)), 1.0 );
-        /// julia
-
-                                //
-                float t = PERIOD*sin((2.0*M_PI)*time/(10.0*PERIOD));
-                // screen position
-                vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                vec2 w = vec2(t,t)+vec2(0.25,0.25);
-                const int iter = 100;
-                int j;
-                for(int i = 0; i < iter; i++){
-                    z = cpx_pow(z,3.0)+w;
-                    if(cpx_mag2(z) > 4.0){
-                        j = i;
-                        break;
-                    }
-                }
-                gl_FragColor = texture2D(tex, vec2((j == iter ? 0.0 : float(j)) / 100.0, 0.5));
-            }
-
-                            vec2 z = 4.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                vec2 w = z;
-                const int iter = 1000;
-                int j;
-                for(int i = 0; i < iter; i++){
-                    z = 0.25*(vec2(1,0) + 4.0*z - cpx_mul( vec2(1,0)+2.0*z, cpx_cos(M_PI*z) ) );
-                    if(cpx_mag2(z) > 10000.0){
-                        j = i;
-                        break;
-                    }
-                }
-                gl_FragColor = texture2D(tex, vec2((j == iter ? 0.0 : float(j)) / 100.0, 0.5));
-
-                float t = PERIOD*sin((2.0*M_PI)*time/(PERIOD));
-                // screen position
-                vec2 z = 2.0*( gl_FragCoord.xy * 2.0 - resolution ) / resolution;
-                vec2 w = z;
-                const int iter = 100;
-                int j;
-                for(int i = 0; i < iter; i++){
-                    w = cpx_pow(cpx_con(w),t)+z;
-                    if(cpx_mag2(w) > 4.0){
-                        j = i;
-                        break;
-                    }
-                }
-                gl_FragColor = texture2D(tex, vec2((j == iter ? 0.0 : float(j)) / 100.0, 0.5));
