@@ -1,0 +1,1 @@
+Library that adds support for GLSL to handle complex numbers uses vec2 as the base type all functions are their normal real name prefixed with 'cpx_'.
